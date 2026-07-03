@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Composable Organization — Review Draft</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --ink:#1C2430; --paper:#FBFAF7; --teal:#0F5B66; --wash:#E8EFED;
+  --sienna:#C05621; --sienna-soft:#F7E8DD; --grey:#5A6A6E; --line:#D8DFDC;
+}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:17px/1.68 Georgia,'Times New Roman',serif;}
+#topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--ink);color:#fff;
+  display:flex;align-items:center;gap:14px;padding:9px 18px;
+  font:13px system-ui,-apple-system,sans-serif;}
+#topbar .tb-title{font-weight:700;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#topbar .tb-hint{color:#B8C4C1;display:none}
+@media(min-width:900px){#topbar .tb-hint{display:inline}}
+#topbar button{margin-left:auto;background:var(--sienna);border:none;color:#fff;
+  font:600 12.5px system-ui,sans-serif;padding:7px 13px;border-radius:3px;cursor:pointer;}
+#topbar button:hover{filter:brightness(1.08)}
+#topbar button:focus-visible,#panel button:focus-visible,.cbox button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#cCount{background:rgba(255,255,255,.14);border-radius:10px;padding:2px 9px;font-variant-numeric:tabular-nums}
+#progress{position:fixed;top:0;left:0;height:3px;background:var(--sienna);z-index:60;width:0}
+#wrap{max-width:1240px;margin:0 auto;padding:76px 20px 120px;display:flex;gap:36px;align-items:flex-start}
+#paper{max-width:70ch;min-width:0;flex:1}
+#paper>h1{font:700 30px/1.2 'Palatino Linotype',Palatino,Georgia,serif;margin:2.2em 0 .4em;
+  padding-top:1.1em;border-top:3px solid var(--teal);text-wrap:balance}
+#paper>h1:first-of-type{margin-top:.4em;border-top:none;padding-top:0;font-size:38px}
+#paper>h2{font:700 22px/1.3 'Palatino Linotype',Palatino,Georgia,serif;margin:2em 0 .5em;color:var(--teal);text-wrap:balance}
+#paper>h2:first-of-type{margin-top:1em}
+#paper h3{font:700 17px/1.35 system-ui,sans-serif;margin:1.7em 0 .4em}
+#paper p{margin:0 0 1em}
+#paper ul,#paper ol{margin:0 0 1em;padding-left:1.4em}
+#paper li{margin-bottom:.35em}
+#paper hr{border:0;border-top:1px solid var(--line);margin:2.4em auto;width:38%}
+#paper strong{color:var(--ink)}
+#paper em{color:#3A4750}
+#paper blockquote{margin:1.2em 0;padding:.85em 1.1em;background:var(--wash);
+  border-left:3px solid var(--teal);font-size:15.5px;line-height:1.6}
+#paper blockquote p{margin:0}
+#paper blockquote.companion{background:#F3F1EA;border-left-color:#A89B6C}
+#paper blockquote.tofix{background:#FDF6EF;border-left-color:var(--sienna);font-style:italic}
+#paper table{border-collapse:collapse;width:100%;margin:1.2em 0;font:13.5px/1.5 system-ui,sans-serif}
+#paper th,#paper td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+#paper th{background:var(--wash);font-weight:700}
+.tablewrap{overflow-x:auto}
+figure.wpfig{margin:1.8em 0;padding:18px 14px 12px;background:#fff;border:1px solid var(--line);border-radius:4px}
+figure.wpfig svg{width:100%;height:auto;display:block}
+figure.wpfig figcaption{font:12.5px/1.5 system-ui,sans-serif;color:var(--grey);margin-top:10px;
+  padding-top:8px;border-top:1px solid var(--line)}
+sup{font-size:.7em}
+.fnref{color:var(--teal)}
+/* commentable affordance */
+.cblock{position:relative;border-radius:3px;transition:background .15s}
+@media (prefers-reduced-motion: reduce){.cblock{transition:none}}
+.cblock:hover{background:rgba(15,91,102,.055);cursor:pointer}
+.cblock.has-c{background:var(--sienna-soft)}
+.cblock.active{outline:2px solid var(--sienna);background:var(--sienna-soft)}
+.cbadge{position:absolute;left:-34px;top:2px;min-width:20px;height:20px;border-radius:10px;
+  background:var(--sienna);color:#fff;font:700 11px/20px system-ui,sans-serif;text-align:center;
+  padding:0 4px;box-sizing:border-box}
+@media(max-width:760px){.cbadge{left:auto;right:-6px;top:-8px}}
+/* panel */
+#panel{width:320px;flex-shrink:0;position:sticky;top:66px;max-height:calc(100vh - 90px);
+  display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:6px;
+  font:13.5px/1.5 system-ui,sans-serif}
+#panel header{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700}
+#panel header small{display:block;font-weight:400;color:var(--grey);margin-top:2px}
+#clist{overflow-y:auto;padding:10px 14px;flex:1}
+.citem{border:1px solid var(--line);border-left:3px solid var(--sienna);border-radius:4px;
+  padding:9px 11px;margin-bottom:10px;background:#fff}
+.citem .cq{color:var(--grey);font-size:12px;font-style:italic;margin-bottom:5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.citem .ct{white-space:pre-wrap;word-break:break-word}
+.citem .cmeta{display:flex;gap:10px;margin-top:7px;font-size:11.5px;color:var(--grey)}
+.citem .cmeta a{color:var(--teal);cursor:pointer;text-decoration:none}
+.citem .cmeta a:hover{text-decoration:underline}
+.citem .cmeta a.del{color:var(--sienna)}
+#empty{color:var(--grey);text-align:center;padding:26px 10px}
+@media(max-width:1150px){
+  #wrap{display:block}
+  #panel{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-height:46vh;
+    border-radius:12px 12px 0 0;box-shadow:0 -6px 24px rgba(28,36,48,.18);
+    transform:translateY(calc(100% - 44px));transition:transform .25s}
+  #panel.open{transform:none}
+  #panel header{cursor:pointer}
+  @media (prefers-reduced-motion: reduce){#panel{transition:none}}
+}
+/* comment box */
+.cbox{margin:8px 0 14px;padding:10px;background:#fff;border:1.5px solid var(--sienna);border-radius:5px;
+  font:13.5px system-ui,sans-serif}
+.cbox textarea{width:100%;box-sizing:border-box;min-height:70px;border:1px solid var(--line);
+  border-radius:3px;padding:8px;font:14px/1.5 system-ui,sans-serif;resize:vertical}
+.cbox .cbrow{display:flex;gap:8px;margin-top:8px}
+.cbox button{border:none;border-radius:3px;padding:7px 14px;font:600 12.5px system-ui,sans-serif;cursor:pointer}
+.cbox .save{background:var(--sienna);color:#fff}
+.cbox .cancel{background:var(--wash);color:var(--ink)}
+.cbox .quote{font-size:12px;color:var(--grey);font-style:italic;margin-bottom:6px}
+/* export modal */
+#modal{position:fixed;inset:0;background:rgba(28,36,48,.5);z-index:100;display:none;
+  align-items:center;justify-content:center;padding:20px}
+#modal.show{display:flex}
+#modal .mbox{background:#fff;border-radius:8px;max-width:640px;width:100%;max-height:80vh;
+  display:flex;flex-direction:column;font:13.5px system-ui,sans-serif}
+#modal .mbox header{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;display:flex;align-items:center}
+#modal .mbox header button{margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;color:var(--grey)}
+#modal textarea{flex:1;margin:14px 18px;min-height:280px;border:1px solid var(--line);border-radius:4px;
+  padding:10px;font:12.5px/1.55 ui-monospace,Consolas,monospace;resize:none}
+#modal .mrow{padding:0 18px 16px;display:flex;gap:10px;align-items:center}
+#modal .mrow button{background:var(--sienna);color:#fff;border:none;border-radius:3px;
+  padding:8px 16px;font:600 13px system-ui,sans-serif;cursor:pointer}
+#modal .mrow span{color:var(--teal);font-weight:600;display:none}
+.docmeta{font:13px system-ui,sans-serif;color:var(--grey);margin:.2em 0 2em;
+  padding-bottom:1.4em;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="topbar">
+  <span class="tb-title">The Composable Organization &#183; review draft</span>
+  <span class="tb-hint">Clicca un paragrafo per commentare &#183; i commenti restano salvati in questo browser</span>
+  <span id="cCount">0</span>
+  <button id="exportBtn" type="button">Esporta feedback</button>
+</div>
+
+<div id="wrap">
+  <main id="paper">
+  <p class="docmeta">DRAFT 2026-07-02 &#183; 12,2k words &#183; figures rendered from the visual plan (FIG 0&#8211;5) &#183; TTB5 integration included &#183; per Simone: clicca su qualsiasi blocco per lasciare un commento, poi &#8220;Esporta feedback&#8221; in alto.</p>
+<hr />
+<h1>The Composable Organization</h1>
+<h2>Structure, Contracts, and Context in the Age of AI</h2>
+<hr />
+<h2>Executive Argument</h2>
+<p>The next organizational challenge is to build a composition layer: an explicit, machine-readable substrate of units, offerings, contracts, and context that lets an organization recombine around new opportunities without starting from scratch each time. It runs deeper than the familiar prescriptions to become more agile, flatter, or more AI-enabled. This paper argues that composability is the <strong>structural capacity the next decade will demand</strong>, and that most organizations lack the layer required to deliver it. The claim, stated plainly: a composable organization is the firm reconceived as a network of explicit contracts, made newly viable because AI collapses the cost of describing, settling, and coordinating those contracts, and newly necessary because AI agents now act as first-class participants that can operate only where that network is explicit.</p>
+<p>The timing is not incidental. Polycrisis, reshoring, compressed planning horizons, and the arrival of autonomous AI agents are all expressions of one condition: the environment now reconfigures faster than the organization can. McKinsey finds structural rigidity ranking ahead of capital, strategy, and technology as the primary barrier to adaptation; across four radically different scenarios for the world ahead, BCG finds one shared requirement, the ability to reconfigure topology, contracts, and capability portfolio at speed. AI sharpens the point rather than resolving it. By collapsing the cost of the managerial scaffolding organizations used to compensate for weak structure, agentic AI acts as a <strong>selection pressure</strong>: where structure is explicit, agents compound the advantage; where it is implicit, they amplify whatever was already ambiguous, fragmented, or broken. This is the mechanism behind a deployment gap in which most organizations report no bottom-line impact from AI despite near-universal adoption.</p>
+<p>The response is a small set of building blocks, each requiring the one before it: capabilities expressed as typed units carrying one of a few recurring archetypes; units written down in a common vocabulary that humans, partners, and agents all read the same way; a vocabulary made operational through explicit contracts that replace centralized budgets; and the whole system kept coherent over time through the discipline of context engineering. Composability is a set of structural commitments about how units, portfolio, and contracts are defined, made explicit, and rendered machine-readable. It is a question of organizational substrate well before it is a question of technology.</p>
+<h2>The Architecture in One Page</h2>
+<p>The paper traces one linear argument. Each step is the precondition for the next.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">The move</th>
+<th style="text-align: left;">Where the paper develops it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">1. Organizations need a composition layer</td>
+<td style="text-align: left;">The substrate that lets an organization recombine without rebuilding itself each time is the layer almost every organization is missing, and AI exposes its absence.</td>
+<td style="text-align: left;">Part I</td>
+</tr>
+<tr>
+<td style="text-align: left;">2. The layer requires typed units</td>
+<td style="text-align: left;">Recombination needs a unit to recombine. Six independent schools of organizational design converge on the same three archetypes (core, supporting, generic), found by lifting domain analysis onto the operating units of the whole organization.</td>
+<td style="text-align: left;">Part II</td>
+</tr>
+<tr>
+<td style="text-align: left;">3. Typed units require a common vocabulary</td>
+<td style="text-align: left;">The units must be written down so that a Wardley practitioner, a domain-driven designer, and a Rendanheyi operator all read the same thing. Four pillars resolve into two world models and an open notation.</td>
+<td style="text-align: left;">Part III</td>
+</tr>
+<tr>
+<td style="text-align: left;">4. The vocabulary becomes operational through contracts</td>
+<td style="text-align: left;">A compact contract grammar turns the vocabulary into coordination, replacing centralized budgets with explicit interfaces that allocate and settle value between units.</td>
+<td style="text-align: left;">Part IV</td>
+</tr>
+<tr>
+<td style="text-align: left;">5. The contract graph becomes an operating architecture</td>
+<td style="text-align: left;">Topology capture, contracts over budgets, and portfolio governance turn the vocabulary and its grammar into the way the organization actually runs.</td>
+<td style="text-align: left;">Part IV</td>
+</tr>
+<tr>
+<td style="text-align: left;">6. The system stays composable through context engineering</td>
+<td style="text-align: left;">A live runtime keeps the model current as the organization changes, holding the modular pieces in alignment and extending the same discipline outward into the ecosystem.</td>
+<td style="text-align: left;">Part V</td>
+</tr>
+</tbody>
+</table>
+<figure class="wpfig" id="fig0"><svg viewBox="0 0 760 120" role="img" aria-label="The six-step argument"><style>.f0t{font:600 12px system-ui,sans-serif;fill:#1C2430}.f0s{font:11px system-ui,sans-serif;fill:#5A6A6E}.f0n{font:700 15px Georgia,serif;fill:#0F5B66}</style><g transform="translate(10,28)"><rect width="112" height="76" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">1</text><text x="10" y="42" class="f0t">Composition</text><text x="10" y="57" class="f0t">layer</text><text x="10" y="72" class="f0s">Part I</text><path d="M116 38 h6 l-4 -4 m4 4 l-4 4" stroke="#0F5B66" fill="none" stroke-width="1.5"/></g><g transform="translate(136,28)"><rect width="112" height="76" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">2</text><text x="10" y="42" class="f0t">Typed</text><text x="10" y="57" class="f0t">units</text><text x="10" y="72" class="f0s">Part II</text><path d="M116 38 h6 l-4 -4 m4 4 l-4 4" stroke="#0F5B66" fill="none" stroke-width="1.5"/></g><g transform="translate(262,28)"><rect width="112" height="76" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">3</text><text x="10" y="42" class="f0t">Common</text><text x="10" y="57" class="f0t">vocabulary</text><text x="10" y="72" class="f0s">Part III</text><path d="M116 38 h6 l-4 -4 m4 4 l-4 4" stroke="#0F5B66" fill="none" stroke-width="1.5"/></g><g transform="translate(388,28)"><rect width="112" height="76" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">4</text><text x="10" y="42" class="f0t">Contract</text><text x="10" y="57" class="f0t">grammar</text><text x="10" y="72" class="f0s">Part IV</text><path d="M116 38 h6 l-4 -4 m4 4 l-4 4" stroke="#0F5B66" fill="none" stroke-width="1.5"/></g><g transform="translate(514,28)"><rect width="112" height="76" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">5</text><text x="10" y="42" class="f0t">Operating</text><text x="10" y="57" class="f0t">architecture</text><text x="10" y="72" class="f0s">Part IV</text><path d="M116 38 h6 l-4 -4 m4 4 l-4 4" stroke="#0F5B66" fill="none" stroke-width="1.5"/></g><g transform="translate(640,28)"><rect width="112" height="76" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="10" y="22" class="f0n">6</text><text x="10" y="42" class="f0t">Context</text><text x="10" y="57" class="f0t">engineering</text><text x="10" y="72" class="f0s">Part V</text></g></svg><figcaption>Figure 0 &#8211; One argument, six steps: each is the precondition for the next.</figcaption></figure>
+
+<p>The main conceptual building blocks along that line: <strong>topology</strong> (the network of units and dependencies, captured as a contract graph rather than an org chart), <strong>taxonomy</strong> (the portfolio of offerings and how they compose), <strong>archetypes</strong> (the recurring unit types, each with its own financial objective and autonomy logic), <strong>contracts</strong> (a grammar of primitives, composition mechanisms, and governance framing), and <strong>context</strong> (the discipline and live runtime that keep the model legible over time). Part I begins where the architecture must: with why the layer is missing in the first place.</p>
+<h2>What This Paper Is – and Is Not</h2>
+<p>The argument above is easy to assimilate to something more familiar than it is, and a few predictable misreadings are worth heading off before Part I.</p>
+<p>This paper is <strong>not</strong> a generic AI transformation whitepaper: AI appears as a selection pressure on existing structure, never as the protagonist. It is not an agile or product operating-model paper; the unit of analysis is the operating organization and its contracts. It is not a software composability paper: microservices, API-first, and headless architectures sit one level of abstraction below, treated here as a precondition. It is not a proposal to flatten the organization, since explicit structure makes governance more legible rather than removable. It is not a proposal to impose internal markets overnight; the path toward financial autonomy is a matter of degree, taken only where it earns its place. And it is not a product brochure for a runtime; the live software layer is described by what it does, never sold.</p>
+<p>What the paper <strong>is</strong> can be stated as plainly. It is a structural argument for making the organization legible as units, offerings, contracts, and context, so that what an organization has, and the terms on which its parts combine, stop living only in headcount plans, slide decks, undocumented integrations, and the heads of long-tenured employees. It is a method for moving from implicit coordination to explicit composition, readable the same way by three kinds of reader at once: the humans who run the organization, the partners who connect to it, and the AI agents now being deployed onto it. And it is a proposal for building that composition layer before scaling agentic coordination, on the diagnosis that agents compound advantage where structure is explicit and amplify ambiguity where it is not.</p>
+<p>A companion volume carries the operating detail: the step-by-step method, the contract mappings, the financial-autonomy layers, and the portfolio mechanics live in the <em>Practitioner's Companion</em>, alongside templates and the bridge to the O2A standard. The two documents know their readers: this one is for deciding that the organization needs a composition layer; the Companion is for building it.</p>
+<hr />
+<h1>Part I – Why Organizations Need a Composition Layer</h1>
+<h2>The Reconfiguration Imperative</h2>
+<p>Most large organizations deploy AI today as a productivity layer: copilots, agents, and decision-support threaded into existing workflows. The early results justify the investment but point at the wrong horizon: the reconfiguration these organizations will need over the next two to three years reaches deeper than any workflow, into how the organization itself is built.</p>
+<p>The pressure is already measurable, and it is not unique to AI. In its <em>State of Organizations 2026</em> survey of more than 10,000 executives across fifteen countries, McKinsey reports that 72% are already experiencing operational disruption from geopolitical instability: supply-chain reroutes, sanctions exposure, partner withdrawals, and lost market access. Asked what prevents them from responding, the most cited barrier outranks capital, strategy, and technology: organizational rigidity itself. Thirty-eight percent name structural rigidity as the primary obstacle to adaptation, and two-thirds describe their organizations as "overly complex." The structure being described lives beneath the org chart on the wall: the ability to reconfigure as conditions change.</p>
+<p>It is also the one requirement on which otherwise incompatible futures agree. In its April 2026 report <em>Beyond Tomorrow: Four Scenarios for the World of 2050</em>, the BCG Henderson Institute modeled four radically different futures, from an AI-driven productivity boom to a fragmentation into hostile trade blocs, a climate-coordinated economy enforcing carbon pricing, and a digital oligarchy. The scenarios disagree on geopolitics, technology, and governance; they converge on one architectural requirement: organizations that survive any of them must rapidly reconfigure their topology, contract structures, and capability portfolio. BCG names this <em>structural resilience</em> and places it first among its five low-regret moves for leaders. The operational question stays open: how, concretely, does an organization become structurally reconfigurable? That is the question this paper exists to answer.</p>
+<p>A second version of the same challenge is emerging from within. Gartner forecasts that 60% of enterprises plan to deploy autonomous AI agents within 24 months, the steepest adoption curve it has measured. These agents enter organizations whose operating logic is largely implicit: undocumented dependencies, workflows understood but never described, knowledge held in the heads of experienced employees. Human organizations absorb that ambiguity through experience and informal coordination; autonomous agents require far more structural clarity. The geopolitical shock arrives from outside, the agentic shock from within: two selection pressures landing on the same surface, exposing the same limitation.</p>
+<p>The pressure also has an economic mirror on the upside. In 1990 Rebecca Henderson and Kim Clark warned incumbents about architectural innovation: the rewiring of how existing components relate, which quietly invalidates the coordination routines a firm spent years building. A 2024 study by Cao, Chen, and Evans turns the warning into a playbook for entrants. Across 298,915 U.S. venture-funded firms from 1976 to 2020, a maximal shift toward architectural innovation, recombining mature modules from distant sectors into configurations nobody has tried, multiplies the odds of IPO or high-value acquisition by nearly ten (an 856% increase), while a comparable shift toward inventing new modules lowers them by 61%. Uber invented none of its components; the innovation lived entirely in the wiring. Herbert Simon gave the deep reason back in 1962: modular assembly hedges against catastrophic failure, so recombination behaves like cheap insurance where invention behaves like an expensive bet. The advantage is migrating from what an organization builds to what it can recombine, and recombination presupposes modularity with explicit interfaces.</p>
+<figure class="wpfig" id="fig1"><svg viewBox="0 0 760 300" role="img" aria-label="Two shocks, one missing layer"><style>.f1h{font:700 13px system-ui,sans-serif;fill:#1C2430}.f1t{font:12px system-ui,sans-serif;fill:#5A6A6E}.f1b{font:700 20px Georgia,serif;fill:#0F5B66;font-variant-numeric:tabular-nums}.f1r{font:700 20px Georgia,serif;fill:#C05621;font-variant-numeric:tabular-nums}.f1l{font:600 11px system-ui,sans-serif;letter-spacing:.06em;fill:#5A6A6E}</style><text x="20" y="30" class="f1l">OUTSIDE</text><text x="20" y="52" class="f1h">Geopolitical shock</text><text x="20" y="70" class="f1t">72% disrupted &#183; 38% name structural</text><text x="20" y="85" class="f1t">rigidity as the primary obstacle (McKinsey)</text><path d="M 240 60 C 300 60, 320 118, 358 132" stroke="#0F5B66" fill="none" stroke-width="2" marker-end="url(#a1)"/><text x="20" y="215" class="f1l">INSIDE</text><text x="20" y="237" class="f1h">Agentic shock</text><text x="20" y="255" class="f1t">60% deploying autonomous agents</text><text x="20" y="270" class="f1t">within 24 months (Gartner)</text><path d="M 240 240 C 300 240, 320 182, 358 168" stroke="#0F5B66" fill="none" stroke-width="2" marker-end="url(#a1)"/><rect x="365" y="118" width="180" height="64" rx="4" fill="#E8EFED" stroke="#0F5B66" stroke-width="1.5"/><text x="455" y="145" text-anchor="middle" class="f1h">The missing</text><text x="455" y="162" text-anchor="middle" class="f1h">composition layer</text><line x1="575" y1="40" x2="575" y2="260" stroke="#B7C6C2"/><text x="600" y="52" class="f1l">THE UPSIDE (CAO 2024)</text><text x="600" y="92" class="f1b">+856%</text><text x="600" y="110" class="f1t">odds of IPO / high-value exit,</text><text x="600" y="125" class="f1t">recombining mature modules</text><text x="600" y="170" class="f1r">&#8722;61%</text><text x="600" y="188" class="f1t">the same odds, inventing</text><text x="600" y="203" class="f1t">new modules instead</text><text x="600" y="240" class="f1t">298,915 firms &#183; 1976&#8211;2020</text><defs><marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0F5B66"/></marker></defs></svg><figcaption>Figure 1 &#8211; Two selection pressures land on the same missing layer, and the market already pays for the ability to recombine (Cao, Chen &amp; Evans 2024).</figcaption></figure>
+
+<p>Boundaryless has spent several years helping organizations build this capacity, across fintech, industrial measurement, imaging, urban mobility, digital health, and energy. What that fieldwork repeatedly surfaces, and what this paper formalizes, is that composability is a structural capability governing how units, portfolios, and contracts are defined, coordinated, and reconfigured over time. The logic traces to Ronald Coase's 1937 question of why firms exist at all, and to the renewed answer agentic AI now imposes on it, a thread we return to in "A Composable Organization". Without this capacity, strategy stays a narrative and technology layered onto rigid structure becomes sunk cost. Understanding the gap from the inside starts with the layer almost every organization is missing: a shared language for describing its structure.</p>
+<h2>The Missing Layer</h2>
+<p>Walk into any large organization and the toolset looks familiar. An ERP tracks resources, a CRM tracks customers, a project platform tracks delivery, an OKR framework tracks goals, and on top sit dashboards, integration buses, data lakes, and a growing tier of AI copilots. From outside, it looks like heavy investment in operating infrastructure.</p>
+<p>Now ask the same organization six questions:</p>
+<ul>
+<li><em>Who does what in the organization, for whom, and under which agreement?</em>  </li>
+<li><em>Which initiatives are exploratory options versus commitments that must deliver predictable performance?</em></li>
+<li><em>Where are the dependencies required to produce a given product or service?</em></li>
+<li><em>How do products overlap and connect, and which of them functions as a control point?</em></li>
+<li><em>Which products are genuinely scalable, and which remain bespoke?</em></li>
+<li><em>Can we genuinely mobilize the capabilities needed to serve this opportunity, and who needs to invest to make it happen?</em>  </li>
+</ul>
+<p>Almost no organization can answer these reliably. The information exists, but everywhere and nowhere at once: in headcount plans, budget lines, slide decks, undocumented integrations, and the heads of long-tenured employees. This is the implicit organization. It functions, yet the structure that makes it work is distributed across systems, documents, and individual experience rather than held as an explicit model. The ERP knows the cost of an FTE without the capability that person represents; the CRM knows the customer without which units are committed to serving them; the OKR framework defines goals without the contracts that make them deliverable. Each system tracks one slice; none tracks the relationships between slices, which is where the organization actually lives.</p>
+<p>This is the condition McKinsey's <em>State of Organizations 2026</em> describes when two-thirds of organizations call themselves "overly complex" and it names <em>"from structure to flow"</em> as the most consequential of nine shifts. The complexity comes less from scale than from the absence of a canonical operating language to connect the parts already in place. In his 1968 essay <em>How Do Committees Invent?</em> Conway observed that the systems an organization produces mirror the communication structures of those who build them. Six decades on, the inverse holds too: the systems an organization buys increasingly mirror the communication structures it never made explicit.</p>
+<p>This is the missing layer, sitting below strategy and above execution, determining whether anything decided at the top can be mobilized at the bottom. Without it, every recombination becomes a one-off act of integration. A launch, a partnership, a reorganization: dependencies clarified again, terms renegotiated, stakeholders realigned, months of latency absorbed before work begins. Tolerable when environments were stable, this becomes untenable as fragmentation, agentic deployment, compressed horizons, and ecosystem competition multiply entropy: strategy slides drift from reality, capabilities stay invisible to the units that need them, agents deployed onto undocumented context produce outputs no one trusts, and partners disengage when the cost of integrating exceeds its value.</p>
+<p>The Boundaryless position is that composability is a set of <em>structural commitments</em> about how units, portfolio, and contracts are defined. Once explicit and operational, the missing layer stops being implicit coordination work and becomes operating infrastructure. What remains of the diagnosis is the second pressure: AI is meant to solve coordination at scale, so the honest question is why, today, it makes this gap worse before it makes it better.</p>
+<h2>AI as Selection Pressure</h2>
+<p>The dominant narrative in 2026 is that organizations are not moving fast enough on AI. The data tells a more uncomfortable story, and it completes the diagnosis Part I has built: AI and organizational rigidity are the same problem in a different form. McKinsey reports that 88% of organizations now deploy AI somewhere in operations, yet 81% see no meaningful bottom-line impact, and in the United States only 1% of the C-suite call their generative AI rollouts mature. Gartner forecasts that more than 40% of agentic AI projects will be canceled before 2027, citing uncontrolled cost, unclear value, and agents acting outside policy. Forrester's <em>Predictions 2026</em> states it directly: the agentic transition is a reinvention of the operating model, and the primary barrier is the absence of a clear one rather than any gap in technology. For every dollar spent on agent licensing, organizations spend roughly five on the services to make those agents work at scale. That 1:5 ratio measures the structural gap: they buy the technology, then discover the substrate to operationalize it does not exist.</p>
+<p>Understanding why requires a distinction the discourse tends to collapse. Organizations run on two kinds of machinery, and AI affects them in opposite directions. <strong>Structure</strong> is the skeleton: the topology of units, the taxonomy of products and capabilities, the contracts governing who delivers what to whom, and the shared semantics that let one part understand another. <strong>Superstructure</strong> is the scaffolding: hierarchical management, bureaucratic process, and the coordination layers that translate context between units lacking a common operational language, historically used to hold the skeleton together when it could not hold itself.</p>
+<p><strong>Structure and superstructure</strong></p>
+<table>
+<thead>
+<tr>
+<th>Structure (the skeleton)</th>
+<th>Superstructure (the scaffolding)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Units</td>
+<td>Hierarchy</td>
+</tr>
+<tr>
+<td>Portfolio taxonomy</td>
+<td>Management layers</td>
+</tr>
+<tr>
+<td>Contracts</td>
+<td>Meetings</td>
+</tr>
+<tr>
+<td>Shared semantics</td>
+<td>Reporting</td>
+</tr>
+<tr>
+<td>Machine-readable commitments</td>
+<td>Informal translation work</td>
+</tr>
+</tbody>
+</table>
+<p>AI is additive to the left-hand column and corrosive to the right. It can consume explicit structure and operate within it; it removes the translation work of superstructure faster than implicit structure can be made explicit to replace it. <strong>As a composition technology, AI can only act on parts that are already composable, which is why it raises the pressure toward explicitness, legibility, and modularity.</strong></p>
+<p>Oliver Williamson explained the scaffolding in his 1975 book <em>Markets and Hierarchies</em>: hierarchical coordination was cheaper than the market when negotiating, monitoring, and enforcing agreements across boundaries was expensive. Agentic AI hits that arrangement asymmetrically. Agents can coordinate, translate context, and manage information flows directly, but only where the underlying structure is explicit and machine-readable. Where it is, they are genuinely additive: they consume the model, operate within its constraints, and produce auditable outputs. Where structure stays implicit, they have nothing stable to anchor to: they drift and optimize locally at the expense of the whole, which is what Capgemini measures when it reports that 71% of organizations cannot fully trust their own AI agents.</p>
+<p>This extension of Williamson has moved from theory into corporate experiment. In their March 2026 essay <em>From Hierarchy to Intelligence</em>, Jack Dorsey and Roelof Botha describe hierarchy as "an information routing protocol" developed for coordination at scale under human cognitive limits. Dorsey argues that Block, the holding company behind Square, Cash App, and Afterpay, is restructuring to replace much of what hierarchy did with a continuously maintained world model of operations and customer reality, rather than bolting copilots onto the hierarchy. AI removes coordination scaffolding rapidly, while the explicit structure both humans and agents depend on grows more necessary.</p>
+<p>This is the mechanism behind the ROI gap. For two decades, organizations compensated for weak structure by accumulating superstructure: more managers, meetings, approval layers, reporting, and translation between fragmented local contexts. <strong>AI removes that translation layer faster than the underlying structure can be made explicit</strong>, so the compensation disappears before the substrate is in place and costs land before returns. AI is a <em>selection pressure</em>: it exposes whether real structural commitments exist beneath the operational surface, the same weakness geopolitical volatility exposes from outside. Organizations that invested early in explicit topology, taxonomy, and contracts see AI compound the advantage; the rest find it amplifies whatever was already implicit, ambiguous, fragmented, or broken. The next part turns from diagnosis to architecture: the structural commitments that place an organization on the additive side of that pressure.</p>
+<hr />
+<h1>Part II – What Becomes Composable</h1>
+<h2>A Composable Organization</h2>
+<p>Picture a leader at a Monday strategy session who has every piece needed to chase a new opportunity: the capabilities exist somewhere in the company, the teams are in place, the partner relationships are live, and the AI agents licensed at considerable expense are waiting for work. Three months later, the opportunity is still being prepared: contracts renegotiated, dependencies clarified, incentives aligned, the same recombination cost paid as the last time. The pieces existed; the composition did not. That absence is the missing layer, and it is what the composable organization solves.</p>
+<p>Put plainly, <strong><em>a composable organization is one that can recombine its capabilities, teams, and partners around a new opportunity without reorganizing each time.</em></strong> That is the whole idea in a sentence. The technical definition fills in how: <strong>a composable organization is a programmable ecosystem of capabilities</strong>. Through portfolio motion it continuously generates options, unbundling and recombining around emerging opportunities; through platform motion it sustains coherence and identity, rebundling those capabilities around shared semantics and control points. Composability, in the sense used here, is <strong>a set of structural commitments</strong>: an explicit topology of units, an explicit taxonomy of products and capabilities, contractual interfaces between them, and the shared semantics that let one part understand what another is doing. The commitments are operational, so they can be implemented, measured, audited, and made machine-readable for humans and agents alike.</p>
+<p>The conceptual ground runs through Ronald Coase's 1937 essay <em>The Nature of the Firm</em>: organizations exist because internal coordination is cheaper than the market when negotiation, monitoring, and enforcement are expensive. Klein and Wieczorek, in their February 2026 arXiv paper <em>The Headless Firm</em>, give Coase's question its post-AI formulation: as agentic AI compresses those costs across boundaries, the firm thins into an hourglass, an intent layer at the top, a thin protocol-and-policy waist, a competitive market of micro-specialized execution agents at the bottom. The implication is direct: in the post-Coase, AI era, the winning organization is the one that <em>composes</em> capabilities at speed, internally and across ecosystem boundaries, rather than the one that owns them all. Read this way, the firm is a network of relations whose actors now include AI agents, the relational view that Bruno Latour's actor-network theory made general.</p>
+<p>The term needs insulating from its vendor-side cognates. Gartner uses "composable" for a software pattern, microservices, API-first, headless architectures; composable banking refers to modularizing regulated financial services. Both sit one level below what this paper means. <strong>A composable organization is the organization itself made recombinable</strong>: typed units that expose what they offer and on what terms, contractual interfaces, shared semantics, and a live software layer that keeps the model current. The software architecture is the precondition; the organizational substrate is what makes it operate.</p>
+<p>This changes the nature of organizational design. Conventional design ends in an artifact, an org chart, an operating-model deck, a three-year roadmap, already obsolete the moment it is delivered. Composable design instead produces an operating substrate: a living system the organization can continuously reconfigure, query, and evolve. The cost of staying with the artifact is measurable: two-thirds of leaders describe their organizations as "overly complex and inefficient", and the traditional remedies of redesigns, cost cuts, and flatter hierarchies are "achieving diminishing returns".<sup id="fnref:4-1"><a class="footnote-ref" href="#fn:4-1">1</a></sup> The composable organization is the architectural response to that limit: a substrate engineered to do what redesigning the artifact cannot.<sup id="fnref:4-2"><a class="footnote-ref" href="#fn:4-2">2</a></sup></p>
+<p>Before the topology, the taxonomy, and the contracts can be built, an organization has to know what its units are and how to find them. We turn to that in the next section.</p>
+<hr />
+<h2>The Unit of Composition</h2>
+<p>Leadership teams ask to be made "more modular" in almost every transformation, and the same ambiguity follows: modular at what level, for whom, through which mechanism? Modularity needs a unit before it can mean anything: a recombinable thing with a boundary, a type, and terms of use.</p>
+<p>The good news buried in that ambiguity is that the major schools of organizational design have already converged on most of the answer. Several largely independent traditions, Team Topologies, Domain-Driven Design, Org Topologies, Wardley's ILC (innovate-leverage-commoditise), EVTP, BetaCodex, and Haier's Rendanheyi (the "one and the same" model tying each employee to the value they create), generalized through Boundaryless's 3EO methodology, land on the same small set of archetypes. They emerged from different problem spaces, from software delivery flow to Chinese industrial transformation, so their convergence reflects something <strong>structural</strong> rather than terminological: across all of them, the same three questions recur, how does the unit relate to the market, how distinctive is its capability, and where does its strategic direction come from. Archetypes that recur across independent observers are not one consultancy's model but a natural vocabulary of organizational structure, the kind of thing worth standardizing.</p>
+<blockquote>
+<p><strong>In the Companion.</strong> The six schools of organizational design mapped onto the same skeleton, school by school.</p>
+</blockquote>
+<p>The three archetypes that result can be read off a single table before the prose that follows develops each one.</p>
+<table>
+<thead>
+<tr>
+<th>Archetype</th>
+<th>Market relation</th>
+<th>Capability logic</th>
+<th>Financial objective</th>
+<th>Autonomy logic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Core / differentiating</strong></td>
+<td>Faces external demand</td>
+<td>Distinctive, customer-valued</td>
+<td>Healthy positive margin</td>
+<td>High, market-shaped autonomy</td>
+</tr>
+<tr>
+<td><strong>Supporting / differentiating</strong></td>
+<td>Serves internal value chain</td>
+<td>Distinctive but indirectly priced</td>
+<td>Modest positive margin / value recognition</td>
+<td>Hybrid autonomy</td>
+</tr>
+<tr>
+<td><strong>Generic / replaceable</strong></td>
+<td>Comparable to external market</td>
+<td>Necessary but not differentiating</td>
+<td>Breakeven</td>
+<td>Efficiency and service discipline</td>
+</tr>
+</tbody>
+</table>
+<h3>The three archetypes</h3>
+<p>The convergence is driven by <strong>three economic relationships</strong> present in any organization above a small start-up. The first is the relationship with the market: certain units face external customers and bear the consequences of being wrong, and they are typically the differentiating core. The second is the relationship between those market-facing units and the distinctive internal capabilities they depend on, capabilities the organization could not easily reproduce even when the market does not price them directly. The third is the relationship with commodity overheads: work the market could supply, kept internal for efficiency or coherence. Typology comes before topology: most organizations at scale contain only a few recurring unit types, usually three to five, and identifying them is the first move of any composable redesign, because contracts, autonomy, adoption, and investment all depend on a unit's structural role.</p>
+<p><strong>Core / differentiating.</strong> A market-facing unit that competes through a distinctive capability customers value and bears revenue risk directly; its objective is a healthy positive margin, its direction comes from external demand. It is the core subdomain in Domain-Driven Design, the User ME in Rendanheyi, Wardley's Explorer, the Adaptive topology in Org Topologies.</p>
+<p><strong>Supporting / differentiating.</strong> A unit whose distinctive internal capability other units depend on, even though the market does not price its output directly. Its objective is a modest positive margin earned through internal value recognition; its direction is hybrid, enough autonomy to evolve the capability while staying aligned downstream. It is the supporting subdomain in DDD, the Node ME in Rendanheyi, Wardley's Leverage-phase unit, the Delivery topology in Org Topologies.</p>
+<p><strong>Generic / replaceable.</strong> A unit whose capability is necessary but which the market could readily supply; its objective is breakeven, its direction efficiency and service discipline, with consuming units free to judge internal provision against the external alternative. It is the generic subdomain in DDD, the Shared Service in Rendanheyi, Wardley's Componentized utility, the Resource topology in Org Topologies.</p>
+<p>These archetypes reached their most developed industrial form at Haier, which formalized them through Rendanheyi as Micro-Enterprises (MEs): small, self-managed units, each with its own P&amp;L, coordinating by contracting with one another. Boundaryless's 3EO methodology, developed with the Haier Model Institute in the early 2020s, generalized the same distinctions beyond Haier; in our recent practice we rename them core, supporting, and generic to separate the structural logic from any single company's vocabulary.</p>
+<h3>How the archetypes behave economically</h3>
+<p>The three financial objectives are not arbitrary: they follow from where each unit stands relative to external demand. Core units face the market and carry revenue risk, so they earn a margin; supporting units hold a distinctive capability the core depends on, so they earn internal recognition with hybrid autonomy; generic units sit against a market alternative, so they run to breakeven on efficiency.</p>
+<blockquote>
+<p>A modular technology platform inside a larger industrial company, built on a hardware-software portfolio, served the market-facing solution units downstream. Internally it ran stream-aligned teams delivering a long-term strategy, while a board set its direction and kept it aligned with the roadmaps of the units it served.</p>
+</blockquote>
+<p>Reading such an arrangement as a denial of autonomy is tempting, since direction is set centrally. Once development cycles are long-term and strategic, that reads as coordination rather than control: the unit keeps the autonomy that matters most, the freedom to evolve its own capability while staying aligned with the units that depend on it. In more mature setups, such units open to external players, a healthy tension that keeps the internal platform from stiffening into a monopoly. This dynamic later appears strategically as the dual motion of portfolio and platform.</p>
+<figure class="wpfig" id="fig2"><svg viewBox="0 0 760 330" role="img" aria-label="Three archetypes, one loop"><style>.f2h{font:700 13px system-ui,sans-serif;fill:#1C2430}.f2t{font:11.5px system-ui,sans-serif;fill:#5A6A6E}.f2l{font:600 10.5px system-ui,sans-serif;letter-spacing:.08em;fill:#0F5B66}</style><rect x="30" y="40" width="210" height="86" rx="4" fill="#fff" stroke="#0F5B66" stroke-width="1.5"/><text x="45" y="62" class="f2l">CORE / DIFFERENTIATING</text><text x="45" y="82" class="f2t">Faces the market, bears revenue risk</text><text x="45" y="98" class="f2t">Objective: healthy margin</text><text x="45" y="114" class="f2t">Direction: external demand</text><rect x="285" y="200" width="210" height="86" rx="4" fill="#E8EFED" stroke="#0F5B66"/><text x="300" y="222" class="f2l">SUPPORTING / DIFFERENTIATING</text><text x="300" y="242" class="f2t">Distinctive capability others rely on</text><text x="300" y="258" class="f2t">Objective: modest margin, recognition</text><text x="300" y="274" class="f2t">Direction: hybrid autonomy</text><rect x="530" y="40" width="200" height="86" rx="4" fill="#fff" stroke="#5A6A6E" stroke-dasharray="4 3"/><text x="545" y="62" class="f2l" fill="#5A6A6E">GENERIC / REPLACEABLE</text><text x="545" y="82" class="f2t">Market could supply it</text><text x="545" y="98" class="f2t">Objective: breakeven</text><text x="545" y="114" class="f2t">Direction: efficiency, service</text><path d="M 150 130 C 170 175, 220 210, 280 232" stroke="#0F5B66" fill="none" stroke-width="2" marker-end="url(#a2)"/><text x="150" y="192" class="f2l">INNOVATE &#8594; LEVERAGE</text><path d="M 500 232 C 560 210, 610 175, 628 130" stroke="#0F5B66" fill="none" stroke-width="2" marker-end="url(#a2)"/><text x="520" y="192" class="f2l">COMPONENTIZE</text><path d="M 530 76 H 250" stroke="#5A6A6E" stroke-dasharray="4 3" fill="none" stroke-width="1.5" marker-end="url(#g2)"/><text x="300" y="66" class="f2t">reusable parts return to the shelf</text><text x="30" y="320" class="f2t">Portfolio motion pulls capabilities apart around opportunities; platform motion pulls them back into a coherent whole.</text><defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0F5B66"/></marker><marker id="g2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5A6A6E"/></marker></defs></svg><figcaption>Figure 2 &#8211; Three recurring unit types, and the loop that keeps converting proven solutions into reusable leverage.</figcaption></figure>
+
+<h2>The Dual Motion: Portfolio and Platform</h2>
+<p>A topology of typed units becomes a strategy only when the units move, and they move in two directions at once: a portfolio motion that pulls capabilities apart to recombine around new opportunities, and a platform motion that pulls them back into a coherent whole.</p>
+<p>Leadership teams opening up to platform plays tend to surface the same ambition: to become <em>the</em> platform. The reflex is half right. Markets are unbundling, industry boundaries are dissolving, and someone will shape the protocols through which value flows across ecosystems. What it misses is that the capital-P Platform model of the early 2010s, a single company as the central marketplace, is no longer the default opportunity: today's markets are already populated by multiple actors holding strategic pieces of the chain. The external platform can no longer be separated from the internal operating model that sustains it; the platform an organization brings to market is an expression of the platform it already is internally, and if the underlying substrate is fragmented or opaque, no amount of front-end design will make the system legible from outside. The strategy that fits the moment is therefore a dual motion: portfolio motion on autonomous units, niche bets, and distributed experiments; platform motion on shared standards, coordination layers, and an identity legible to customers and partners.</p>
+<p>The two motions also describe how the archetypes behave once in play. Core units provide vertical solutions for end-users' primary and emerging use cases; supporting units integrate the diverse needs the core surfaces into more general horizontal layers, becoming shared platforms that push the verticals toward more specialized innovation. The loop runs along Wardley's ILC cycle: core nodes <strong>innovate</strong>, supporting platforms <strong>leverage</strong>, and over time they <strong>componentize</strong>, standardizing interfaces so internal units and external partners can build on top more cheaply. Verticals win on variety and speed; horizontal platforms standardize and scale for coherence.</p>
+<blockquote>
+<p>Return to that technology platform inside the company building industrial measurement tools. A core unit builds a vertical application for one customer's specific problem, winning on fit. When neighboring units need something similar, the platform absorbs the common parts and turns a one-off into a reusable capability, then standardizes the interfaces so others, and eventually outside partners, build on top. The solution units keep exploring at the edge; the platform keeps consolidating underneath.</p>
+</blockquote>
+<p>The two motions also differ in kind. Modular moves enlarge what the organization can do, its stock of capability; architectural recombination selects which configuration to actualize, and therefore which outcome to pursue. Capability is close to value-neutral, since the same modules wire into many different ends. Architecture is where the ends are chosen, which is why the constraints an organization sets on composition, the governance framing of Part IV, are where its values enter the structure.</p>
+<p>Neither motion succeeds alone: a portfolio without a platform fragments into disconnected initiatives; a platform without a portfolio hardens into a structure that cannot adapt. What AI changes is the balance. As a capability amplifier and coordination medium it lets small teams operate with disproportionate leverage and lets capabilities interact without bespoke integration, which <strong>strengthens portfolio motion</strong>: more autonomous units become viable and more experiments can coexist. The deeper shift is on the side of coherence. Before AI, coherence depended on enforced standardization: a capability had to be translated into stable, codified interfaces before it could be reused. AI lets the coordination layer mediate between different vocabularies in real time, so platform motion persists but its center of gravity moves from enforcing uniformity to designing <strong>shared intelligibility</strong>: the semantic structures, ontologies, and references that let heterogeneous units compose without becoming identical. Modularity without shared semantics fragments; shared semantics without modularity is coherent on the surface and rigid underneath. What holds both together operationally is a shared semantic backbone, the common vocabulary developed in Part III.</p>
+<hr />
+<h1>Part III – The Common Vocabulary</h1>
+<h2>Two World Models</h2>
+<p>A composable organization has to model two realities without collapsing them: the organization it is (its units, the offerings they expose, the terms on which one part can draw on another) and the world it serves (the customers, their workflows, what counts for them as a successful outcome). The two are authored and owned differently, and an organization that conflates them ends up with an internal cost model leaking into customer-facing pricing, or a model of customer needs quietly reshaping itself along the org chart, a classic expression of Conway's Law.</p>
+<p>The <strong>Company World Model</strong> is the internal map, the structural side, answering <strong><em>what do we have, who owns it, and on what terms can it be used</em></strong>: the operating units that populate the topology, the contracts that bind them, and the offerings they expose, typed by the taxonomy.</p>
+<p>The <strong>Customer World Model</strong> is the semantic representation of the demand side, the value side, answering <strong><em>who do we serve, what do they want, how do they think, what counts as a successful outcome</em></strong>: the ecosystem served, the entities within it, their workflows, and the deep domain ontology of their industry. It is unique to each organization, though shaped by the arenas it operates in.</p>
+<p>The two models share entities at their boundary. An offering exists in both: in the Company World Model it carries internal cost, capability composition, and operational metadata; in the Customer World Model, the value proposition and the user's expectation. The discipline is to keep the two coherent, so the same offering means the same thing on both sides, while keeping them separate, so the internal cost model never leaks into customer-facing language. The offering is therefore where the two worlds meet, and it is why composability has to be read in the taxonomy of offerings as much as in the topology of units: units recompose in order to assemble the client-facing offerings the taxonomy describes. Topology says which units can combine; taxonomy says into what, and for which customer.</p>
+<figure class="wpfig" id="fig3"><svg viewBox="0 0 760 330" role="img" aria-label="Two world models, one boundary object"><style>.f3t{font:11.5px system-ui,sans-serif;fill:#5A6A6E}.f3l{font:600 10.5px system-ui,sans-serif;letter-spacing:.08em;fill:#0F5B66}.f3p{font:600 11px system-ui,sans-serif;fill:#1C2430}</style><rect x="20" y="30" width="310" height="200" rx="6" fill="#E8EFED" stroke="#0F5B66"/><text x="40" y="56" class="f3l">COMPANY WORLD MODEL</text><text x="40" y="74" class="f3t">configured from open standards</text><rect x="40" y="90" width="130" height="34" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="52" y="111" class="f3p">P1 &#183; Topology</text><rect x="40" y="132" width="130" height="34" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="52" y="153" class="f3p">P2 &#183; Taxonomy</text><text x="40" y="196" class="f3t">units &#183; contracts &#183; offerings</text><rect x="430" y="30" width="310" height="200" rx="6" fill="#fff" stroke="#0F5B66"/><text x="450" y="56" class="f3l">CUSTOMER WORLD MODEL</text><text x="450" y="74" class="f3t">always custom, per domain and problem</text><rect x="450" y="90" width="160" height="34" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="462" y="111" class="f3p">P3 &#183; Client ontology</text><text x="450" y="152" class="f3t">ecosystem &#183; workflows &#183; outcomes</text><g transform="translate(380,130)"><path d="M0,-34 L34,0 L0,34 L-34,0 z" fill="#fff" stroke="#C05621" stroke-width="2"/><text x="0" y="-2" text-anchor="middle" class="f3p" fill="#C05621">the</text><text x="0" y="12" text-anchor="middle" class="f3p" fill="#C05621">offering</text></g><text x="380" y="190" text-anchor="middle" class="f3t">internal cost &#183; composition | value proposition &#183; expectation</text><path d="M 120 240 v 24" stroke="#5A6A6E" stroke-width="1.5" marker-end="url(#g3)"/><path d="M 380 240 v 24" stroke="#5A6A6E" stroke-width="1.5" marker-end="url(#g3)"/><rect x="60" y="270" width="640" height="42" rx="4" fill="#fff" stroke="#B7C6C2"/><text x="80" y="296" class="f3p">P4 &#183; Value Stream &amp; Outcome Graph <tspan class="f3t">&#8212; derived view, rendered visible by the Portfolio Map</tspan></text><defs><marker id="g3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5A6A6E"/></marker></defs></svg><figcaption>Figure 3 &#8211; The two world models: each answers its own questions; the offering sits at their boundary, coherent on both sides but never collapsed.</figcaption></figure>
+
+<p><em>Figure – The two world models. Each answers its own questions and is built differently; the offering sits at their boundary, coherent on both sides but never collapsed.</em></p>
+<p>The organizational formulation of the <strong>world model</strong>, a <em>company world model</em> and a <em>customer world model</em>, was made explicit by Jack Dorsey and Roelof Botha in their March 2026 essay <em>From Hierarchy to Intelligence</em>, arguing that an AI-native company should build a living model of its internal functioning on one side and a deep model of customer reality on the other. Dorsey and Botha made the language visible; Boundaryless has been operationalizing the same distinction all along, through portfolio mapping, ecosystem scanning, and topology work. These two models are what the four pillars exist to render.</p>
+<h2>The Pillars</h2>
+<p>The Boundaryless approach renders the common vocabulary as four pillars: four interconnected semantic elements that define the machine-readable substrate of a composable organization and map onto the two world models rather than sitting as a flat list.</p>
+<p>The first two pillars, <strong>Organizational Topology</strong> and <strong>Portfolio Taxonomy</strong>, constitute the Company World Model: units and the contracts between them, offerings and how they compose. <strong>Pillar 3, the Client and Ecosystem Workflow Ontology</strong>, models the demand and collaboration side, always custom per domain and problem, and corresponds to the Customer World Model. <strong>Pillar 4, the Value Stream and Outcome Graph</strong>, sits apart on purpose: it emerges from the nodes and contract graph that Pillars 1 and 2 maintain, linking how nodes and offerings contribute to value as it moves toward the customer, Value Stream Mapping recast for an organization seen as an architecture of nodes and commitments. It is the view the Portfolio Map renders visible.</p>
+<p><strong>Table – Two world models, four pillars.</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Company World Model</th>
+<th style="text-align: left;">Customer World Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Question it answers</td>
+<td style="text-align: left;">What do we have, who owns it, on what terms</td>
+<td style="text-align: left;">Who do we serve, what they want, how do they interact and cooperate, what counts as success</td>
+</tr>
+<tr>
+<td style="text-align: left;">Pillars</td>
+<td style="text-align: left;">Organizational Topology + Portfolio Taxonomy</td>
+<td style="text-align: left;">Client and Ecosystem Workflow Ontology</td>
+</tr>
+<tr>
+<td style="text-align: left;">How it is built</td>
+<td style="text-align: left;">Configured from open standards</td>
+<td style="text-align: left;">Always custom, per domain and problem</td>
+</tr>
+</tbody>
+</table>
+<p>In their own terms: <strong>Pillar 1</strong> models the operative structure so the organization becomes legible as a network rather than an org chart, units as nodes carrying one of the three archetypes, edges carrying contracts with an explicit economic taxonomy; it is the most mature pillar in field deployment. <strong>Pillar 2</strong> models how offerings relate: one offering runs on another as its substrate, extends it, attaches to its transaction, enables it to exist, bundles with it, or hardens into a reusable component, relations that turn a flat catalog into a graph of composition. <strong>Pillar 3</strong> models the client's semantic world, workflows, language, and desired outcomes, always custom, though the architectural hooks that attach client workflows to offerings recur and can be modeled.</p>
+<p>Together the four pillars establish the semantic substrate composability depends on, the structure both humans and agents operate against. It has a technology-layer parallel: McKinsey's <em>State of Organizations 2026</em> describes an "AI mesh", a composable, vendor-agnostic AI architecture, which becomes legible only when an organizational mesh exists beneath it, and BCG's <em>Beyond Tomorrow</em> calls for the same modularity in the tech and data stack. The pillars give that technology modularity its organizational counterpart. They say what the organization is; they are only useful if they can be written down in a form that travels.</p>
+<h2>Writing the Vocabulary Down</h2>
+<p>The pillars describe a substrate. The practical question is where it lives: in what artifacts does the vocabulary get written down so that humans, partners, and agents read it the same way? Each pillar resolves into a concrete artifact an organization can produce, version, and share.</p>
+<p><strong>The Company World Model</strong> is written into two of them:</p>
+<p><strong>Organizational Topology</strong> is recorded as a topology graph, the representation of units as nodes and dependencies as edges, with each node carrying its archetype, financial logic, autonomy level, and strategic role, and each edge carrying the contract that governs it. </p>
+<blockquote>
+<p>At an industrial measurement company with a hardware-software portfolio, for example, the unit that owns a vertical monitoring solution appears as a node with its own P&amp;L, and its edges carry the co-delivery contract that, among other terms, assigns 22% of the bundle's net revenue to the hardware platform. </p>
+</blockquote>
+<p><strong>Portfolio Taxonomy</strong> is recorded as the typed catalog of offerings and the composition relations between them, the graph that turns a flat list of products and services into a structure of substrates, extensions, bundles, and reusable components. </p>
+<blockquote>
+<p>At a social-innovation non-profit foundation, for example, the catalog types a livelihoods solution as a bundle: a single client-facing package assembling one unit's domain expertise, another's monitoring-and-evaluation offering, and a third's field research. </p>
+</blockquote>
+<p>The <strong>Portfolio Map Canvas</strong> is the working surface on which these two come together during a Capture engagement. It places the portfolio across five layers, read top to bottom:</p>
+<ul>
+<li>the customer ecosystem served;</li>
+<li>the customer needs, mapped against maturity and impact;</li>
+<li>the go-to-market strategies, matched to each maturity stage;</li>
+<li>the value propositions offered against those needs;</li>
+<li>the organizational elements: which units own which capabilities, and how they relate to the archetypes.</li>
+</ul>
+<p>Because it places each offering on the innovate-leverage-componentize axis, the canvas is also where the topology graph and the portfolio taxonomy stay aligned with the value flows that Pillar 4 derives from them.</p>
+<blockquote>
+<p>[FIGURE PLACEHOLDER – insert the Portfolio Map Canvas visual here. Source: <em>BLS – PMC – Portfolio Map Canvas Application Guide, v0.1, March 2025</em> (<code>Sorgenti/Key Guides and Technical/</code>). Suggested caption: <em>Figure – The Portfolio Map Canvas: five layers read top to bottom, with each offering placed on the innovate-leverage-componentize axis.</em>]</p>
+</blockquote>
+<p><strong>The Customer World Model</strong> is written down differently, because it cannot be configured from a standard catalog. </p>
+<p>The <strong>Client and Ecosystem Workflow Ontology</strong> is captured through Boundaryless's scanning practices, the Arena Scan and the Ecosystem Scan, which surface the entities an organization operates among, their relationships, and the domain language they share; the customer and domain ontology is authored from that material. The same instruments keep the two world models aligned, because they expose where an offering's customer-facing meaning has drifted from its internal definition.</p>
+<blockquote>
+<p>[FIGURE PLACEHOLDER – insert two canvas visuals here: the <strong>Ecosystem Scan canvas</strong> and the <strong>Arena Scan canvas</strong>. Both exist as Boundaryless assets, though they are not in <code>Sorgenti/Key Guides and Technical/</code> – source files to be provided. Suggested caption: <em>Figure – The Ecosystem Scan and the Arena Scan: the instruments that surface the entities, relationships, and domain language from which the customer and domain ontology is authored.</em>]</p>
+</blockquote>
+<p>Underneath all of these sits the <strong>contract schema</strong>: the explicit description of the economic relationship each edge represents, the bridge to the contract grammar of Part IV, allowing a commitment between two units to be stated once and read consistently by a manager, a partner, or an agent.</p>
+<blockquote>
+<p>At a regional fintech with a multi-unit holding, for example, the pilot version of this schema publishes the HR unit's 22 services, each with a description, a proposed SLA, and an indicative price, as the single reference point for every consuming unit – the same commitment read identically by the manager who requests the service and the platform that tracks its delivery.</p>
+</blockquote>
+<p>A distinction runs through every one of these artifacts: canonical structure versus local implementation. The Company World Model is <em>configured from open standards</em>, shared vocabulary stable across organizations, locally instantiated; the Customer World Model is always custom, though its architectural hooks recur often enough to be modeled. Writing the vocabulary down means holding both at once: a canonical structure that travels and a local implementation that fits. With it written down, the question becomes how units transact across these artifacts, the contract grammar of Part IV.</p>
+<hr />
+<h1>Part IV – The Contract Grammar at Work</h1>
+<p>The vocabulary says what the organization is; it does not yet say how its units transact, or how the architecture is operated day to day. Part IV supplies both: the contract grammar every inter-unit relationship is built from, the five economic invariants that hold at any unit-to-unit interface, the named instruments read as sentences of that grammar, and then the operating practice, capturing the real organization, replacing budgets with contracts, and governing the portfolio as a living system. The specialist mappings and the full operating mechanics are set aside for the Practitioner's Companion.</p>
+<h2>Contracts as Language</h2>
+<p>The field broadly agrees on what the actors of a modern organization are; it agrees far less on how they transact. The schools concur that a supporting unit is structurally distinct from a core unit, yet say little about what it means for the supporting unit to fund a capability the core will later depend on, or how three units bind to a shared outcome without a manager standing over them. Only Rendanheyi offers a small library of named agreements, the Value Adjustment Mechanism (funding) and the Ecosystem Micro Community (multi-unit).</p>
+<p>Williamson's account, met in "AI as Selection Pressure", explains why: for most of the twentieth century, negotiating, monitoring, and enforcing an explicit agreement between two parts of a business cost more than managing the work through the hierarchy. That calculus is now shifting. As AI lowers the cost of describing, monitoring, and settling commitments between units, the threshold at which an explicit contract beats implicit management keeps falling, which is why every organization gains from making its inter-unit relationships explicit, not only those chasing internal markets. A contract here does not presuppose a profit center moving real money: a team consuming another's output can hold an explicit interface and an SLA with no budget changing hands, and how far a unit travels toward a genuine P&amp;L is a matter of degree, the three-layer progression of "Contracts Over Budgets".</p>
+<p>A composable organization needs a generalizable grammar for how units collaborate, invest, exchange value, evolve, and coordinate around shared outcomes, expressive enough to model complex coordination yet compact enough to stay intelligible, so that a small set of mechanisms generates a wide range of arrangements without bespoke design each time.</p>
+<p>From our field experience, a minimum viable grammar operates across three layers: three base primitives, two composition mechanisms, and one governance framing.</p>
+<figure class="wpfig" id="fig4"><svg viewBox="0 0 760 360" role="img" aria-label="The 3+2+1 contract grammar"><style>.f4t{font:11.5px system-ui,sans-serif;fill:#5A6A6E}.f4l{font:600 10.5px system-ui,sans-serif;letter-spacing:.08em;fill:#0F5B66}.f4p{font:600 11.5px system-ui,sans-serif;fill:#1C2430}.f4n{font:700 18px Georgia,serif;fill:#0F5B66;font-variant-numeric:tabular-nums}</style><text x="20" y="30" class="f4l">3 BASE PRIMITIVES</text><g transform="translate(20,42)"><rect width="130" height="30" rx="15" fill="#E8EFED" stroke="#0F5B66"/><text x="65" y="19" text-anchor="middle" class="f4p">Purchase</text><rect y="38" width="130" height="30" rx="15" fill="#E8EFED" stroke="#0F5B66"/><text x="65" y="57" text-anchor="middle" class="f4p">Revenue split</text><rect y="76" width="130" height="30" rx="15" fill="#E8EFED" stroke="#0F5B66"/><text x="65" y="95" text-anchor="middle" class="f4p">Investment</text></g><text x="210" y="30" class="f4l">2 COMPOSITION MECHANISMS</text><g transform="translate(210,42)"><rect width="180" height="30" rx="4" fill="#fff" stroke="#0F5B66"/><text x="90" y="19" text-anchor="middle" class="f4p">Multi-party binding</text><rect y="38" width="180" height="30" rx="4" fill="#fff" stroke="#0F5B66"/><text x="90" y="57" text-anchor="middle" class="f4p">Outcome triggering</text></g><text x="450" y="30" class="f4l">1 GOVERNANCE FRAMING</text><rect x="450" y="42" width="290" height="68" rx="4" fill="#fff" stroke="#5A6A6E" stroke-dasharray="4 3"/><text x="465" y="64" class="f4t">constraints set by leadership &#183; targets,</text><text x="465" y="80" class="f4t">evolution triggers, exit options &#183; composition</text><text x="465" y="96" class="f4t">devolved to the units</text><line x1="20" y1="140" x2="740" y2="140" stroke="#B7C6C2"/><text x="20" y="166" class="f4l">SENTENCES THE FIELD ALREADY NAMES</text><g transform="translate(20,180)"><g transform="translate(0,0)"><rect width="170" height="58" rx="4" fill="#E8EFED" stroke="#B7C6C2"/><text x="12" y="20" class="f4p">VAM</text><text x="12" y="37" class="f4t">investment +</text><text x="12" y="51" class="f4t">governance framing</text></g><g transform="translate(185,0)"><rect width="170" height="58" rx="4" fill="#E8EFED" stroke="#B7C6C2"/><text x="12" y="20" class="f4p">EMC</text><text x="12" y="37" class="f4t">multi-party split +</text><text x="12" y="51" class="f4t">triggering + settlement</text></g><g transform="translate(370,0)"><rect width="170" height="58" rx="4" fill="#E8EFED" stroke="#B7C6C2"/><text x="12" y="20" class="f4p">Joint venture</text><text x="12" y="37" class="f4t">revenue split +</text><text x="12" y="51" class="f4t">investment</text></g><g transform="translate(555,0)"><rect width="170" height="58" rx="4" fill="#E8EFED" stroke="#B7C6C2"/><text x="12" y="20" class="f4p">Bundle</text><text x="12" y="37" class="f4t">split over a</text><text x="12" y="51" class="f4t">composed offering</text></g></g><line x1="20" y1="266" x2="740" y2="266" stroke="#B7C6C2"/><text x="20" y="292" class="f4l">FIELD PROOF</text><text x="20" y="322" class="f4n">~15 products &#8594; 3 contract types &#8594; 0 new types</text><text x="20" y="344" class="f4t">a social-innovation non-profit: every product on the shelf composed from the same three atoms</text></svg><figcaption>Figure 4 &#8211; The 3+2+1 grammar: three primitives, two composition mechanisms, one governance framing. Everything the field names is a sentence composed from these atoms.</figcaption></figure>
+
+<p><em>Figure – The 3 + 2 + 1 grammar. Base primitives and composition mechanisms are portable; governance framing operates at runtime.</em></p>
+<p><strong>Table – The contract grammar.</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Layer</th>
+<th style="text-align: left;">Elements</th>
+<th style="text-align: left;">Function</th>
+<th style="text-align: left;">Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Base primitives</td>
+<td style="text-align: left;">Purchase · Revenue split · Investment</td>
+<td style="text-align: left;">Atomic economic relationships between parties</td>
+<td style="text-align: left;">Portable standard</td>
+</tr>
+<tr>
+<td style="text-align: left;">Composition mechanisms</td>
+<td style="text-align: left;">Multi-party binding (tags) · Outcome triggering (milestones + oracles)</td>
+<td style="text-align: left;">Combine primitives into larger structures</td>
+<td style="text-align: left;">Portable standard</td>
+</tr>
+<tr>
+<td style="text-align: left;">Governance framing</td>
+<td style="text-align: left;">Operating targets · evolution triggers · exit options</td>
+<td style="text-align: left;">Wraps contracts at runtime, adapts over time</td>
+<td style="text-align: left;">Runtime</td>
+</tr>
+</tbody>
+</table>
+<h3>Base primitives</h3>
+<p>The first layer defines three atomic economic relationships. <strong>Purchase</strong>: one party pays another for a service or good under agreed terms. <strong>Revenue split</strong>: two or more parties share revenue from a joint output by an agreed allocation rule. <strong>Investment</strong>: one party funds another's capability development against agreed deliverables, with returns through milestones, recurring payments, or equity-like participation. These are the economic atoms; complex structures emerge through their composition rather than through new contract types.</p>
+<h3>Composition mechanisms</h3>
+<p>The second layer defines how primitives combine. <strong>Multi-party binding</strong> extends a primitive from two parties to many, or links several contracts into one coordinated initiative through shared tags. <strong>Outcome triggering</strong> activates or deactivates clauses on external conditions, through milestones that are human-approved or verified by oracles. The objective is coordination made programmable without the model becoming unreadable.</p>
+<h3>Governance framing</h3>
+<p>The third layer, the <strong>governance framing</strong>, wraps units and contracts in a recurring structure of operating targets, evolution triggers, escalation paths, and exit options. It provides the ground on which nodes operate and coordinate autonomously, and setting that ground is the work of leadership: defining the enabling constraints and the <em>forcing functions</em>, which units the organization features and with what mandates, who connects with customers directly, what targets and skin-in-the-game units carry, and how strategy shapes capital allocation, for example through OKRs.</p>
+<p>One boundary inside this layer matters more than the rest. Leadership keeps the two genuinely strategic acts, allocating capital and setting the enabling constraints; the composition of architectures themselves, which unit combines with which peer or outside partner and under which agreement, devolves to the units, because they are the ones close enough to the opportunity to act while it is still there. Where the center is the only actor allowed to authorize a recombination, the organization runs only as many architectural experiments as the board has attention for, and the promise of modularity collapses back into a bottleneck. Distributed composition needs a shared base language among peers, which is exactly what this grammar provides.</p>
+<p>Setting the constraints is the deepest act in the layer: as long as the single forcing function is profit, every recombination happens inside one institutional species; make the constraint set a genuine choice, including regenerative constraints that optimize for value beyond profit alone, and leadership is choosing which kinds of institution its units are permitted to become.</p>
+<p>The three base primitives, the two composition mechanisms, and the governance framing are the whole grammar needed to run a composable organization. Everything an organization has to name, from a simple internal purchase to a multi-unit venture, is composed from these elements. What that composition looks like once real budget moves along the contracts – showback, settlement, and the path toward financial autonomy – belongs to the operating sequence in "Contracts Over Budgets", not here.</p>
+<h2>Economic Invariants</h2>
+<p>Before the grammar is composed into instruments, five practical principles govern when a contract is the wrong shape. In our field experience they hold at every unit-to-unit interface, regardless of which school an organization came in through, and they tell you a contract will fail before it does.</p>
+<ol>
+<li>When a unit is deliberately shielded from market discipline, the shielding party owns the investment and the risk.</li>
+<li>A new capability one node needs from another must be directly funded, paid for with share-of-upside, or carried as an equity-class instrument on a shared cap table. It is never taken as given.</li>
+<li>Internal monopolies require governance discipline or they become a tax on the rest of the organization.</li>
+<li>Misaligned incentives between two units cannot be fixed by an SLA alone. Revenue-share or shared bonus pools are the only mechanisms that realign them.</li>
+<li>Two units with high mutual dependency are one unit pretending to be two. The honest move is either to consolidate them or to create real exit options.</li>
+</ol>
+<p>These five are not optional refinements: in our engagements, violations of them have reliably preceded the breakdown of unit-to-unit coordination. One implication shows them living in practice. When one unit needs a capability another must build, the development can be funded in more than one way, by the downstream unit directly, by the contributing unit against future upside, or by a holding entity through ownership-style mechanisms; the grammar stays the same, and what changes is who carries the risk and who shares the upside. Making that choice explicit is the difference between a capability genuinely invested in and one silently assumed, and an assumed capability rarely materializes without an endless thread of escalations. The instruments an organization actually uses are composed from the grammar within those rules, and the field has already named several of them.</p>
+<h2>Patterns in the Grammar</h2>
+<p>The grammar's real power is compositional. Any institutional instrument, however imposing, is a short composition once read through the grammar, which is why the field has already named such composites, each in its own dialect: Rendanheyi names the EMC and the VAM, Team Topologies names its interaction modes (collaboration, X-as-a-service, facilitating), Domain-Driven Design names its context-mapping patterns. Each captures a recurring way units or contexts relate, and each is expressible in the same small grammar, which lets them be compared, decomposed, and recombined rather than learned one institution at a time.</p>
+<p>In our fieldwork, four compositions recur often enough to be worth naming; each tends to appear in service of a particular kind of move.</p>
+<p><strong>Table – Four recurring patterns, composed from the grammar.</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Named pattern</th>
+<th style="text-align: left;">Composition</th>
+<th style="text-align: left;">Typically in service of</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Investment with negotiated targets (like Haier's VAM)</td>
+<td style="text-align: left;">Investment + governance framing</td>
+<td style="text-align: left;">Funding a unit's capability development, with periodic renegotiation of its targets and rewards</td>
+</tr>
+<tr>
+<td style="text-align: left;">Multi-unit shared venture (like Haier's EMC)</td>
+<td style="text-align: left;">Multi-party revenue split + outcome triggering + shared settlement</td>
+<td style="text-align: left;">A new product launch, or a shared performance objective such as an OKR, that several units must deliver together</td>
+</tr>
+<tr>
+<td style="text-align: left;">Joint venture</td>
+<td style="text-align: left;">Revenue split + investment</td>
+<td style="text-align: left;">Incubating a new unit born from a collaboration between two or more parties</td>
+</tr>
+<tr>
+<td style="text-align: left;">Product bundle</td>
+<td style="text-align: left;">Revenue split over a composed offering (sometimes plus investment)</td>
+<td style="text-align: left;">Shelf offerings broader than any single unit can provide; when the bundle needs new features, the development investment implies a revenue share</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>In the Companion.</strong> Each of the four patterns worked through, composition by composition.</p>
+</blockquote>
+<p>None of the four needs a new contract type, and a runtime can generate and settle any of them without fresh institutional design. The grammar behaves less like a catalog of recipes and more like a generative system: a few primitives, mechanisms, and governance layers compose into an open-ended set of named patterns, and complexity scales through composition rather than through the endless addition of bespoke contracts. Naming a pattern is convenient shorthand; the pattern is only ever its composition.</p>
+<h2>Operating the Architecture</h2>
+<p>What remains is operating practice, in the order an organization actually adopts it: capture, then contract, then operate the portfolio.</p>
+<h2>Topology in Practice: Capture the Real Organization</h2>
+<p>The first concrete move of a composable redesign is to capture the real organization as a contract graph. Two business units inside a global pharma platform depend on each other daily yet report to different leaders under separate P&amp;Ls, locked in recurring friction; every reorganization cycle attempts to resolve it and leaves the underlying dependency untouched, because the org chart cannot represent the relationship itself. The org chart organizes around authority; the contract graph organizes around value exchange, who delivers what to whom, under which conditions, at what cadence. Building it enumerates the units, their capabilities, the dependencies between them, and the contracts governing those dependencies whether explicit or implicit, typing each unit against the archetypes. Once the graph exists, the analysis that turns it into a redesign is essentially domain-driven: separating real dependencies from historical artifacts, resolving capability overlaps, and surfacing the missing or mispriced interfaces where coordination is currently held together by informal effort.</p>
+<blockquote>
+<p><strong>In the Companion.</strong> The capture method in full: the recurring moves, capability overlaps, and unpriced interfaces.</p>
+<p><strong>In practice.</strong> Within an industrial measurement company operating a hardware-software portfolio, the map revealed that three separate product lines had each built their own data-ingestion stack for slightly different sensor protocols. Consolidating the domain under a shared platform unit cut estimated integration costs by roughly forty percent and let the product teams focus on differentiated capabilities higher in the stack. The structural insight surfaced quickly once the map existed; the transition took far longer, because unwinding the duplication meant renegotiating ownership, incentives, and contracts across teams.</p>
+</blockquote>
+<p>McKinsey's <em>State of Organizations 2026</em> reports that organizations redesigning around their real operational structure achieve roughly three times higher decision velocity, the gain coming less from restructuring than from visibility: most organizations already hold the capabilities they need; what stays invisible is the relationships among them. This is why capture is the entry point, and why a Boundaryless engagement begins here. The map is only a picture of who delivers what to whom; turning those edges into the way value is allocated and settled, in place of the budget, comes next.</p>
+<h2>Contracts Over Budgets</h2>
+<p>Once the topology is captured, its dependencies stop being lines on a diagram and become relationships that have to be funded, priced, and settled. Most organizations still do that with the annual budget; a composable organization uses the contracts on the graph instead. The desire surfaces regularly in boardrooms: real accountability rather than budget theater. The harder question is operational, how to distribute accountability through everyday work rather than an annual ritual: budgeting evolved for stability and centralized authority, and under continuous recombination, agentic coordination, and ecosystem-scale operations, contracts carry coordination budgets were never designed to manage.</p>
+<p>What each contract is meant to achieve depends on the archetype signing it. A core unit aims for a healthy positive margin reflecting its distinctive capability; a supporting unit for a modest margin generated through value-chain recognition rather than treatment as overhead; a generic unit for breakeven against the external market alternative. Contracts make those three objectives explicit, so a unit is held to the target appropriate to its type rather than a single undifferentiated expectation of profit. Naming the objective this way also dissolves two recurring confusions before they distort the internal market, the structural-deficit fallacy (reading a distinctive supporting unit as inefficient when it is merely unrecognized) and the convenience premium (treating a deliberately retained generic capability as a hidden loss).</p>
+<p>The transition rarely happens at once. Across engagements, Boundaryless has repeatedly observed a three-layer progression, each layer creating the conditions for the next. <strong>Layer 0, Catalog Visibility</strong>, is an explicit service catalog: no money moves, but units begin to see themselves as economic actors and structural blind spots surface. <strong>Layer 1, Virtual Economics</strong>, adds showback: cross-unit value flows priced in notional terms without budget transfer, exposing the informal subsidies and asymmetric dependencies budgeting conceals; it is here that the structural-deficit fallacy is usually laid to rest. <strong>Layer 2, Financial Autonomy</strong>, introduces real contractual settlement: units transfer budget through instrumented contracts, and patterns such as EMC and VAM carry actual economic weight, each settlement target following the archetype's financial objective. The progression is gradual by design; much of the value appears at Layers 0 and 1, before any money moves, and Layer 2 is a deliberate choice made where real transfer earns its overhead, not a destination every organization should be pushed toward.</p>
+<blockquote>
+<p><strong>In the Companion.</strong> The three-layer progression specified in full, with the structural-deficit fallacy and the convenience premium.</p>
+<p><strong>In practice.</strong> Within a digital-health company operating a portfolio of clinical services, a Software Development Unit initially functioned as a traditional cost center. Layer 0 surfaced two software capabilities consumed across every clinical line without any explicit pricing structure. Layer 1 introduced showback and revealed that the software unit had been absorbing capability-development costs the clinical businesses were never asked to support financially. Layer 2 introduced a VAM-style autonomy arrangement combining contractual funding, revenue-sharing clauses, and measurable downstream adoption targets. The structural progression remained the same while the parameters adapted to the company's regulatory and operational environment.</p>
+</blockquote>
+<p>Capture and contract together render the organization legible from the inside out: which units exist, how they depend on each other, and how value is allocated and settled between them. They say less about what those units actually put on the shelf. The offerings a portfolio carries compose and mature according to their own logic, and we turn next, in "Portfolio as System", to governing that logic as deliberately as the topology.</p>
+<h2>Portfolio as System</h2>
+<p>Capture maps the units and their contracts; the portfolio is the other face of the same organization, the offerings those units expose and the ways they combine. Left untended it reads as a flat catalog; governed as a system it reads as an offering graph, each offering carrying a type, a maturity, and the composition relations Pillar 2 defines. Reading it as a graph turns three recurring judgments into repeatable moves: when an offering becomes a reusable component, when a shared capability should be extracted into a platform unit, and when a bundle has outgrown its parts enough to become a unit in its own right. None of the three touches only one model, so the discipline is keeping taxonomy, topology, and contract graph consistent as offerings move. Boundaryless governs this on the Portfolio Map Canvas.</p>
+<blockquote>
+<p><strong>In the Companion.</strong> Portfolio governance in full, with the Portfolio Map Canvas; see also the PMC Application Guide.</p>
+</blockquote>
+<p>Capture made the units legible, contracts made value flow legible, and portfolio governance keeps the offerings legible as they compose and mature. All three are pictures of a moving organization, and the structural clarity that justified the work decays unless someone keeps it current. We take that problem up in Part V, turning these maps into a living system that humans and agents can keep current as the organization evolves.</p>
+<hr />
+<h1>Part V – Keeping It Composable</h1>
+<h2>Context Engineering as a Discipline</h2>
+<p>An organization that has done the structural work of the preceding parts has, in effect, modularized itself: its units are typed, they have a contractual language, and that language has become operating mechanisms. This part answers what keeps the pieces fitting. Modularization is a design act with an end; staying composable is not. New units form, offerings mature and decompose, partners arrive, agents take on work, and each change risks pulling the modular pieces out of alignment, because the language at the boundaries decays unless someone keeps authoring it. The discipline of keeping a modular organization composable as it changes is what we call context engineering: the roof of the architecture, not a fifth pillar, consuming the contract graph and the domain ontology and keeping them coherent as the organization changes. A word of honesty: the mechanisms are still emerging from fieldwork, a practice taking shape rather than a settled method.</p>
+<p>Four ideas hold the discipline together.</p>
+<p>The first is that boundaries need authored language. Modularity alone does not compose; two units fit only if they share a language at the boundary, and that language has to be deliberately authored and maintained or the pieces drift back into implicit coordination. The second is that staying composable is an ongoing discipline, not a finished state: the map captured in Part IV decays the instant units split, merge, or renegotiate, so context engineering's most underestimated part is evolution, the continuous updating that prevents context rot, the silent degradation of shared meaning that accumulates whenever the work stops. The third is that comprehensibility is the goal, not control for its own sake: the discipline was first framed as a defense against AI drift, but the deeper move is to set intentional direction and keep observability of what is generated against it, so the artifacts stay humanly comprehensible even when they exceed what one person can hold in mind. The fourth is that it closes a thread running through the paper: domain analysis, introduced to find an organization's units and seen again as context-mapping became contract types, arrives here at its root, making systems intelligible for humans and machines at once rather than merely describing them for machines.</p>
+<p>At its simplest, context engineering is the discipline of making organizational context explicit, asking four questions and keeping the answers current: what does the organization do, for whom, under which constraints, and through which configurations of capabilities? An organization that keeps answering them can be read as a context engine: bounded contexts, a navigation language, a business logic, and an experience layer through which work is mobilized, from dashboards to agentic surfaces. We offer that as a working identification rather than a proven equivalence; it earns its place because, read this way, internal teams, partners, and agents share the same surface, calibrated to their roles. The next section shows the running machinery.</p>
+<h2>The Context Engine</h2>
+<p>The previous parts describe the architecture; the context engine is its runtime-oriented expression, where the two world models meet inside a single piece of machinery. It is not a finished framework but a pattern still forming across engagements. Large organizations rarely need a single engine; they need several at different scales, talking through semantic interfaces, a divisional engine inside the corporate one, a product engine inside the divisional, each inheriting structural heuristics from above and specializing its ontology. The runtime is fractal, and the navigation language at each level is what lets the fractal compose rather than fragment. The engine is the operational artifact through which agentic composition becomes reliable: a structured, versioned system that consumes both world models plus the rules under which agents may act, and produces the executable artifacts the organization runs on, through four internal layers on top of a substrate.</p>
+<figure class="wpfig" id="fig5"><svg viewBox="0 0 760 340" role="img" aria-label="The context engine"><style>.f5t{font:11.5px system-ui,sans-serif;fill:#5A6A6E}.f5l{font:600 10.5px system-ui,sans-serif;letter-spacing:.08em;fill:#0F5B66}.f5p{font:600 11.5px system-ui,sans-serif;fill:#1C2430}</style><rect x="20" y="40" width="220" height="230" rx="6" fill="#E8EFED" stroke="#0F5B66"/><text x="38" y="66" class="f5l">SUBSTRATE</text><rect x="38" y="82" width="184" height="56" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="50" y="104" class="f5p">Company World Model</text><text x="50" y="122" class="f5t">pillars 1+2 &#183; open standards</text><rect x="38" y="150" width="184" height="72" rx="3" fill="#fff" stroke="#B7C6C2"/><text x="50" y="172" class="f5p">Composition runtime</text><text x="50" y="190" class="f5t">deterministic-first,</text><text x="50" y="206" class="f5t">agentic where structure ends</text><path d="M 244 150 h 32" stroke="#0F5B66" stroke-width="2" marker-end="url(#a5)"/><rect x="280" y="40" width="240" height="230" rx="6" fill="#fff" stroke="#0F5B66" stroke-width="1.5"/><text x="298" y="66" class="f5l">CONTEXT ENGINE</text><rect x="298" y="80" width="204" height="36" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="310" y="102" class="f5p">Customer World Model</text><rect x="298" y="126" width="204" height="36" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="310" y="148" class="f5p">Use cases: roles &#215; scenarios</text><rect x="298" y="172" width="204" height="36" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="310" y="194" class="f5p">UX surfaces: page contracts</text><rect x="298" y="218" width="204" height="36" rx="3" fill="#E8EFED" stroke="#B7C6C2"/><text x="310" y="240" class="f5p">Harnesses: rules for agents</text><path d="M 524 150 h 32" stroke="#0F5B66" stroke-width="2" marker-end="url(#a5)"/><rect x="560" y="88" width="180" height="120" rx="6" fill="#E8EFED" stroke="#0F5B66"/><text x="578" y="114" class="f5l">ONE SURFACE</text><text x="578" y="140" class="f5p">Humans</text><text x="578" y="162" class="f5p">Partners</text><text x="578" y="184" class="f5p">Agents</text><path d="M 60 292 H 700" stroke="#B7C6C2"/><text x="60" y="318" class="f5t">outward: internal &#8594; partner &#8594; ecosystem composability &#8212; be a module on the shelf</text><defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#0F5B66"/></marker></defs></svg><figcaption>Figure 5 &#8211; The context engine: the substrate feeds four layers that produce one surface humans, partners, and agents read together.</figcaption></figure>
+
+<p><em>Figure – The context engine. The Company World Model and a composition runtime form the substrate; the Customer World Model layer, the use cases, the UX surfaces, and the harness rules sit inside the engine that produces what the organization runs on.</em></p>
+<p>The first layer is the Customer World Model itself: the context map and the formal ontology of the objects living across those contexts. Its construction surfaces three kinds of language, the internal language within a bounded context, the published language at the boundary (which must be authored, because it is the contract between contexts), and the UX language exposed to users; conflating them produces brittleness, keeping them separate produces autonomy without fragmentation. The second layer maps roles to capabilities to scenarios; the third declares how roles encounter the engine through page contracts that specify what each surface must do rather than what it looks like. The fourth, the harnesses, encodes the rules under which agentic action is permitted, identity, compliance, source-of-truth routing, compositional validity; it is where the organization's horizontal constraints enter the engine, so no agent bypasses a constraint the organization has already declared. Beneath sits the substrate: the Company World Model, configured from open standards, and a live runtime pairing a deterministic orchestrator with an agentic composer that handles only the residual semantic work. The engine is built real-case-first, validated against a first case that stresses every layer end-to-end, then expanded case by case.</p>
+<blockquote>
+<p><strong>The Composition Discipline (emerging from the field).</strong> Through 2026 Boundaryless has applied a recurring intervention across three structurally different engagements, a global pharmaceutical enterprise-platform program, a global mobility platform ecosystem, and an agent-native operating product built in-house, which converged on the same architecture despite differing in industry, scale, and interface modality. The engagements converge on five principles: author the language at the boundary; treat intent as the scarce resource; hold two world models coherent but separate; build real-case-first with progressive coverage; keep governance inside the harnesses. The three engagements are detailed in the Practitioner's Companion.</p>
+</blockquote>
+<h2>Deterministic-first, Agentic-where-necessary</h2>
+<p>One principle governs how the runtime does its work, and it holds across every engagement regardless of the software being produced. The runtime should be deterministic wherever structure can be declared, and agentic only where residual semantic interpretation is genuinely required.</p>
+<p>By deterministic we mean work specified once, in code or configuration, that runs the same way every time; by agentic, the residual judgment an AI agent supplies only where no such specification is possible. The agent is never the default execution engine: wherever a composition can be expressed deterministically, that is the preferred mode, cheaper, more predictable, easier to audit. The agent enters only where determinism breaks: when context is scattered across systems and must be retrieved on demand, when a request must be translated from natural language into a structured composition, or when constraints from multiple harnesses must be reconciled at composition time. The value of the work is measured by how reliably the agent does the residual non-deterministic work without breaking the deterministic substrate beneath it; an engagement where the agent expands its scope at the expense of deterministic operations is a failing engagement, however impressive the demonstration. The aim is an agent exactly where structure runs out, and nowhere else.</p>
+<h2>From Organization to Ecosystem</h2>
+<p>Mastering context engineering internally lets an organization extend its context outward and become the attractor around which an ecosystem condenses. The progression runs in three stages: internal composability; partner composability, where a partner that can read the organization's published language composes with it without either side dissolving into the other; and ecosystem composability, where the organization offers its own context as the ground a wider ecosystem coordinates on. Semantic interfaces take on the role APIs played in the deterministic era, and context engineering at the edge becomes ecosystem engineering.</p>
+<p>Participation is the stake. Architectural innovation at ecosystem scale recombines modules that others can actually pick up, so an organization takes part in innovation it did not originate only if its capabilities exist as modules with explicit interfaces; a monolith is not on the shelf, and the recombination proceeds around it with other people's parts. The same conclusion is arriving from outside the firm: surveying what the disciplines know about designing institutions, Geoff Mulgan observed in 2026 that modular institutions with clearly defined interfaces between components are easier to reform, audit, and upgrade than monolithic ones. Unbundling is how an organization innovates on itself, and it is also how it earns the right to be part of innovation elsewhere.</p>
+<hr />
+<h2>Conclusion: The First Composable Step</h2>
+<p>This paper has traced a single argument. Organizations need a composition layer, the layer below strategy and above execution that lets them recombine without rebuilding. That layer requires typed units; typed units require a common vocabulary; the vocabulary becomes operational through contracts; and the whole system stays composable through context engineering, the discipline that keeps the language at the boundaries current as the organization keeps changing. The remaining question is the only one that matters to a leader on Monday morning: where does an organization actually start?</p>
+<p>The instinct is to start with the technology: license more agents, stand up a runtime, commission a platform. That inverts the lesson of "AI as Selection Pressure", because deploying capability onto implicit structure is what produces the trust deficits, the canceled projects, and the five dollars of services for every dollar of license. An organization that installs a runtime before it can answer the six questions of "The Missing Layer" has simply automated its own opacity. The first step is smaller, cheaper, and almost entirely human: make the organization visible as a contract graph. This is the Capture move, and the first practical artifact a composable organization produces. It needs no new software or reorganization, only enumerating the units, typing each against the three archetypes, separating real dependencies from historical accidents, and registering the contracts that already govern the work, written down or not. The output is a map of the organization that runs the work, usually very different from the one on the chart.</p>
+<p>Concretely, the first composable step produces six things:</p>
+<ul>
+<li>a map of units, each one named and typed against the three archetypes;</li>
+<li>a map of offerings, the value each unit actually exposes to others and to the market;</li>
+<li>a map of dependencies, the real lines of reliance that run between units;</li>
+<li>a map of explicit and implicit contracts, the commitments already governing those dependencies, including the ones no one ever wrote down;</li>
+<li>a first view of value flows, how value moves across the units, offerings, and dependencies once the dependencies are made visible;</li>
+<li>a first set of unresolved interfaces requiring design, the boundaries where no clear contract yet exists and where coordination is currently being held together by informal effort.</li>
+</ul>
+<p>That last item is the one that earns its keep. The unresolved interfaces are where the implicit coordination work has been hiding, and naming them is what turns a diagnostic map into a design agenda.</p>
+<p>Almost everything else can wait. The internal market need not switch on; most of the early value comes before any budget moves. The Customer World Model need not be authored in full; it is built per engagement, against real cases. The runtime need not exist; the graph is legible on paper long before it is executable. Naming the units alone tends to produce more structural clarity than several prior rounds of restructuring. Once the graph exists, the discipline shifts from drawing the picture to keeping it alive: catalog visibility invites showback, showback invites settlement, the static topology becomes a live runtime humans and agents read together, and context engineering at the edge turns the organization's own model into the ground an ecosystem composes on. This is the deeper shift the paper has built toward, from organizational design as a static artifact to continuous composition.</p>
+<p>So the first composable step is an act of seeing, well before it is a technology decision or a reorganization. Make the organization visible as a contract graph, and the composition layer every organization now needs stops being implicit coordination work and starts becoming operating infrastructure. Everything else, the typed units, the common vocabulary, the contracts, the context engine, follows from that first map, and is only ever as good as the honesty of the organization it draws.</p>
+<hr />
+<hr />
+<blockquote>
+<p><strong>In the Companion.</strong> The convergence across the six schools in detail, and the full library of field patterns.</p>
+</blockquote>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:4-1">
+<p>Krivkovich et al. 2026, 4.&#160;<a class="footnote-backref" href="#fnref:4-1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4-2">
+<p>The architectural prescription appears in BCG's <em>Beyond Tomorrow: Four Scenarios for the World of 2050</em> (Lang et al. 2026) as two of five low-regret moves: <em>Enhance Structural Resilience</em> and <em>Build Digital Flexibility and Trust</em>, the latter calling for "a modular approach to tech and data stacks ... architectures that can be swapped, isolated, or localized as the emerging situation demands".&#160;<a class="footnote-backref" href="#fnref:4-2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+  </main>
+  <aside id="panel" aria-label="Commenti">
+    <header id="panelHead">Commenti <span id="pc"></span><small>clicca un blocco del testo per aggiungerne</small></header>
+    <div id="clist"><div id="empty">Nessun commento ancora.<br>Clicca un paragrafo, una tabella o una figura per iniziare.</div></div>
+  </aside>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true" aria-label="Esporta feedback">
+  <div class="mbox">
+    <header>Feedback pronto da incollare <button id="mClose" type="button" aria-label="Chiudi">&#215;</button></header>
+    <textarea id="mText" readonly></textarea>
+    <div class="mrow"><button id="mCopy" type="button">Copia negli appunti</button><span id="mOk">Copiato &#10003;</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY='wp-review-comments-v1';
+  var paper=document.getElementById('paper');
+  var comments=[];
+  try{comments=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){comments=[]}
+
+  // wrap tables for horizontal scroll
+  paper.querySelectorAll('table').forEach(function(t){
+    var w=document.createElement('div');w.className='tablewrap';
+    t.parentNode.insertBefore(w,t);w.appendChild(t);
+  });
+  // classify special blockquotes
+  paper.querySelectorAll('blockquote').forEach(function(b){
+    var tx=b.textContent.trim();
+    if(tx.indexOf('In the Companion.')===0) b.classList.add('companion');
+    if(tx.indexOf('[FIGURE PLACEHOLDER')===0||tx.indexOf('[Figure to insert')===0) b.classList.add('tofix');
+  });
+
+  // assign stable ids + section tracking
+  var section='Front matter'; var idx=0; var blocks=[];
+  Array.prototype.forEach.call(paper.children,function(el){
+    var tag=el.tagName;
+    if(tag==='H1'||tag==='H2'){section=el.textContent.trim();}
+    if(/^(P|BLOCKQUOTE|UL|OL|H2|H3)$/.test(tag)||el.classList.contains('tablewrap')||el.classList.contains('wpfig')){
+      if(el.classList.contains('docmeta'))return;
+      idx++;
+      el.dataset.cid='b'+idx;
+      el.dataset.section=section;
+      el.classList.add('cblock');
+      el.setAttribute('tabindex','0');
+      blocks.push(el);
+    }
+  });
+
+  function snippet(el){
+    var t=(el.querySelector('figcaption')?el.querySelector('figcaption').textContent:el.textContent)||'';
+    t=t.replace(/\s+/g,' ').trim();
+    return t.length>90? t.slice(0,90)+'…': t;
+  }
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function save(){localStorage.setItem(KEY,JSON.stringify(comments));render();}
+
+  var openBox=null, activeEl=null;
+  function closeBox(){
+    if(openBox){openBox.remove();openBox=null;}
+    if(activeEl){activeEl.classList.remove('active');activeEl=null;}
+  }
+  function openCommentBox(el){
+    closeBox();
+    activeEl=el; el.classList.add('active');
+    var sel=(window.getSelection?String(window.getSelection()):'').replace(/\s+/g,' ').trim();
+    var box=document.createElement('div');box.className='cbox';
+    box.innerHTML=(sel?'<div class="quote">&#8220;'+esc(sel.slice(0,140))+(sel.length>140?'…':'')+'&#8221;</div>':'')
+      +'<textarea placeholder="Il tuo commento su questo blocco…"></textarea>'
+      +'<div class="cbrow"><button class="save" type="button">Salva</button><button class="cancel" type="button">Annulla</button></div>';
+    el.after(box); openBox=box;
+    var ta=box.querySelector('textarea'); ta.focus();
+    box.querySelector('.cancel').onclick=function(ev){ev.stopPropagation();closeBox();};
+    box.querySelector('.save').onclick=function(ev){
+      ev.stopPropagation();
+      var txt=ta.value.trim(); if(!txt){closeBox();return;}
+      comments.push({id:Date.now()+''+Math.floor(Math.random()*999),
+        cid:el.dataset.cid, section:el.dataset.section, snip:snippet(el),
+        quote:sel||'', text:txt, ts:new Date().toISOString().slice(0,16).replace('T',' ')});
+      closeBox(); save();
+      var pn=document.getElementById('panel'); if(pn) pn.classList.add('open');
+    };
+    box.addEventListener('click',function(ev){ev.stopPropagation();});
+  }
+
+  paper.addEventListener('click',function(ev){
+    var el=ev.target.closest('.cblock');
+    if(!el||!paper.contains(el))return;
+    if(ev.target.closest('.cbox'))return;
+    if(ev.target.closest('a'))return;
+    openCommentBox(el);
+  });
+  paper.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'&&ev.target.classList&&ev.target.classList.contains('cblock')){openCommentBox(ev.target);}
+    if(ev.key==='Escape')closeBox();
+  });
+
+  function render(){
+    // badges
+    blocks.forEach(function(el){
+      el.classList.remove('has-c');
+      var b=el.querySelector(':scope > .cbadge'); if(b)b.remove();
+    });
+    var byCid={};
+    comments.forEach(function(c){byCid[c.cid]=(byCid[c.cid]||0)+1;});
+    Object.keys(byCid).forEach(function(cid){
+      var el=paper.querySelector('[data-cid="'+cid+'"]');
+      if(!el)return;
+      el.classList.add('has-c');
+      var b=document.createElement('span');b.className='cbadge';b.textContent=byCid[cid];
+      el.appendChild(b);
+    });
+    // panel
+    var list=document.getElementById('clist');
+    list.innerHTML='';
+    if(!comments.length){
+      list.innerHTML='<div id="empty">Nessun commento ancora.<br>Clicca un paragrafo, una tabella o una figura per iniziare.</div>';
+    } else {
+      comments.slice().reverse().forEach(function(c){
+        var d=document.createElement('div');d.className='citem';
+        d.innerHTML='<div class="cq">'+esc(c.section)+' &#8250; &#8220;'+esc(c.quote||c.snip)+'&#8221;</div>'
+          +'<div class="ct">'+esc(c.text)+'</div>'
+          +'<div class="cmeta"><span>'+c.ts+'</span><a class="go">vai al punto</a><a class="del">elimina</a></div>';
+        d.querySelector('.go').onclick=function(){
+          var el=paper.querySelector('[data-cid="'+c.cid+'"]');
+          if(el){el.scrollIntoView({block:'center'});el.classList.add('active');
+            setTimeout(function(){el.classList.remove('active');},1600);}
+        };
+        d.querySelector('.del').onclick=function(){
+          comments=comments.filter(function(x){return x.id!==c.id;});save();
+        };
+        list.appendChild(d);
+      });
+    }
+    document.getElementById('cCount').textContent=comments.length;
+    document.getElementById('pc').textContent=comments.length?('('+comments.length+')'):'';
+  }
+
+  // export
+  function buildMd(){
+    var out=['# Feedback – The Composable Organization (review draft 2026-07-02)','',
+      comments.length+' commenti · esportati '+new Date().toISOString().slice(0,16).replace('T',' '),''];
+    var bySec={};
+    comments.forEach(function(c){(bySec[c.section]=bySec[c.section]||[]).push(c);});
+    Object.keys(bySec).forEach(function(sec){
+      out.push('## '+sec,'');
+      bySec[sec].forEach(function(c){
+        out.push('- **['+(c.quote||c.snip)+']**');
+        out.push('  '+c.text.replace(/\n/g,'\n  '),'');
+      });
+    });
+    return out.join('\n');
+  }
+  var modal=document.getElementById('modal');
+  document.getElementById('exportBtn').onclick=function(){
+    document.getElementById('mText').value=comments.length?buildMd():'(nessun commento ancora)';
+    document.getElementById('mOk').style.display='none';
+    modal.classList.add('show');
+  };
+  document.getElementById('mClose').onclick=function(){modal.classList.remove('show');};
+  modal.addEventListener('click',function(ev){if(ev.target===modal)modal.classList.remove('show');});
+  document.getElementById('mCopy').onclick=function(){
+    var ta=document.getElementById('mText');
+    ta.select();
+    var done=function(){document.getElementById('mOk').style.display='inline';};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ta.value).then(done,function(){document.execCommand('copy');done();});
+    }else{document.execCommand('copy');done();}
+  };
+
+  // drawer toggle on narrow screens
+  document.getElementById('panelHead').addEventListener('click',function(){
+    if(window.matchMedia('(max-width:1150px)').matches){
+      document.getElementById('panel').classList.toggle('open');
+    }
+  });
+
+  // progress bar
+  var prog=document.getElementById('progress');
+  window.addEventListener('scroll',function(){
+    var h=document.documentElement;
+    var p=h.scrollTop/(h.scrollHeight-h.clientHeight);
+    prog.style.width=(p*100)+'%';
+  },{passive:true});
+
+  render();
+})();
+</script>
+
+</body>
+</html>
