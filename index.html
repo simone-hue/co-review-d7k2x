@@ -126,7 +126,7 @@ sup{font-size:.7em}
 
 <div id="wrap">
   <main id="paper">
-  <p class="docmeta">DRAFT 2026-07-05 (r2) &#183; integra il primo giro di feedback di Simone &#183; figure FIG 0&#8211;5 &#183; clicca su qualsiasi blocco per lasciare un commento, poi &#8220;Esporta feedback&#8221; in alto.</p>
+  <p class="docmeta">DRAFT 2026-07-15 (r3) &#183; integra tutti i 20 commenti del primo export &#183; 8 figure &#183; figure FIG 0&#8211;5 &#183; clicca su qualsiasi blocco per lasciare un commento, poi &#8220;Esporta feedback&#8221; in alto.</p>
 <hr />
 <h1>The Composable Organization</h1>
 <h2>Structure, Contracts, and Context in the Age of AI</h2>
@@ -721,7 +721,7 @@ sup{font-size:.7em}
   }
 
   function buildMd(){
-    var out=['# Feedback – The Composable Organization (review draft r2, 2026-07-05)','',
+    var out=['# Feedback – The Composable Organization (review draft r3, 2026-07-15)','',
       comments.length+' commenti · esportati '+new Date().toISOString().slice(0,16).replace('T',' '),''];
     var bySec={};
     comments.forEach(function(c){(bySec[c.section]=bySec[c.section]||[]).push(c);});
